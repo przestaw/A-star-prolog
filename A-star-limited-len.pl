@@ -1,44 +1,49 @@
 % Calls main program, initializes empty nodes queue and empty path
 %    - InitState - initial state
 %    - PathCost - resulting path cost
-start_A_star(InitState, PathCost) :-
+%	 - Max - maximum path lenght
+start_A_star(InitState, PathCost, MaxDepth) :-
     % Initial cost based on InitState and InitScore heuristic
     score(InitState, 0, 0, InitCost, InitScore),
     % Run main procedure with Queue containing initial state and empty closed set
-    search_A_star( [node(InitState, nil, nil, InitCost, InitScore ) ], [ ], PathCost) .
+    search_A_star( [node(InitState, nil, nil, InitCost, InitScore ) ], [ ], PathCost, MaxDepth, 1) .
 
 % Main algorithm step
-search_A_star(Queue, ClosedSet, PathCost) :-
+search_A_star(Queue, ClosedSet, PathCost, MaxDepth, N) :-
     % 'fetch' first element from queue
-    fetch(Node, Queue, ClosedSet, RestQueue),
+    fetch(Node, Queue, ClosedSet, RestQueue, N),
     % check Node state and end if condition is met, otherwise continue
-    continue(Node, RestQueue, ClosedSet, PathCost).
+    continue(Node, RestQueue, ClosedSet, PathCost, MaxDepth, N).
 
 % If Node state is destined end
-continue(node(State, Action, Parent, Cost, _), _, ClosedSet,path_cost(Path, Cost)) :-
+continue(node(State, Action, Parent, Cost, _), _, ClosedSet,path_cost(Path, Cost), MaxDepth, N) :-
     % Check 
-    goal(State), !,
+    N =< MaxDepth, goal(State), !,  
     % Build path and return it with it's cost
     build_path(node(Parent, _, _, _, _), ClosedSet, [Action/State], Path) .
 
 % If Node is not destinated end
-continue(Node, RestQueue, ClosedSet, Path) :-
+continue(Node, RestQueue, ClosedSet, Path, MaxDepth, N) :-
+    % increment counter
+    N =< MaxDepth, M is N+1
     % Expand Node neighbours
     expand(Node, NewNodes),
     % Insert Nodes to Queue
     insert_new_nodes(NewNodes, RestQueue, NewQueue),
     % Call algorithm step, moving Node to ClosedSet
-    search_A_star(NewQueue, [Node| ClosedSet ], Path).
+    search_A_star(NewQueue,[Node| ClosedSet ], Path, MaxDepth, M).
 
 % Checks if first node in Queue is not in ClosedSet
-fetch( node(State, Action, Parent, Cost, Score), 
+fetch(node(State, Action, Parent, Cost, Score), 
       [node(State, Action, Parent, Cost, Score)|RestQueue], 
-      ClosedSet, RestQueue) :-
+      ClosedSet, RestQueue, N) :-
+    N >= 1,
     \+member(node(State, _, _, _, _), ClosedSet), ! .
 
-% If first node is in closed set, remove it and call for modified Queue
-fetch(Node, [ _ |RestQueue], ClosedSet, NewRest):-
-    fetch(Node, RestQueue, ClosedSet, NewRest).
+% If first node is in closed set and path has at least 2 nodes, remove it and call for modified Queue
+fetch(Node, [ _ |RestQueue], ClosedSet, NewRest, N):-
+    N > 1, M is N-1, 
+    fetch(Node, RestQueue, ClosedSet, NewRest, M).
 
 % Constructs list of neighbours for a given Node
 expand(node(State, _, _, Cost, _), NewNodes) :-
@@ -46,7 +51,7 @@ expand(node(State, _, _, Cost, _), NewNodes) :-
     findall(
         node(ChildState, Action, State, NewCost, ChildScore),
         (succ(State, Action, StepCost, ChildState), score(ChildState, Cost, StepCost, NewCost, ChildScore)),
-        NewNodes),!.
+        NewNodes), !.
 
 % Calculates cost function for a State
 score(State, ParentCost, StepCost, Cost, FScore) :-
@@ -58,7 +63,7 @@ score(State, ParentCost, StepCost, Cost, FScore) :-
     FScore is Cost + HScore .
 
 % Stop condition
-insert_new_nodes( [ ], Queue, Queue) .
+insert_new_nodes([ ], Queue, Queue) .
 
 % (<Nodes to be inserted>, <PriorityQueue>, <ResultingQueue>)
 % takes first Node and puts into PriorityQueue on each step
@@ -67,7 +72,7 @@ insert_new_nodes([Node|RestNodes], Queue, NewQueue):-
     insert_new_nodes(RestNodes, Queue1, NewQueue).
 
 
-insert_p_queue(Node, [ ], [Node] ) :- !.
+insert_p_queue(Node, [ ], [Node]) :- !.
 % Insert Node into PriorityQueue
 insert_p_queue( node(State, Action, Parent, Cost, FScore),
                [node(State1, Action1, Parent1, Cost1, FScore1)|RestQueue],
@@ -81,7 +86,7 @@ build_path(node(nil, _, _, _, _), _, Path, Path) :- ! .
 % build path from destinated end to start [which has nil preceding state]
 build_path(node(EndState, _, _, _, _), Nodes, PartialPath, Path) :-
     del(Nodes, node(EndState, Action, Parent, _, _  ), Nodes1),
-    build_path( node(Parent, _, _, _, _), Nodes1,[Action/EndState|PartialPath], Path) .
+    build_path(node(Parent, _, _, _, _), Nodes1, [Action/EndState|PartialPath], Path) .
 
 % Deletes X element from first arg and returns R(esult)
 del([X|R], X, R).

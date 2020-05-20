@@ -6,7 +6,15 @@ Program created for Symbolic Programming Languages on university. For easier und
 
 To run this algorithm you need to define set of vertices, indices and set goal as in *roadmap.pl*.
 
+### A-star.pl
 Main procedure is calld like : ``start_A_star(InitState, PathCost)``
 where:
 - *InitState* is start point,
 - *PathCost* is resulting cost of travel form start to goal
+
+### A-star-limited-len.pl
+Main procedure is calld like : ``start_A_star(InitState, PathCost, MaxPathLen)``
+where:
+- *InitState* is start point,
+- *PathCost* is resulting cost of travel form start to goal
+- *MaxPathLen* is maximum len of path
