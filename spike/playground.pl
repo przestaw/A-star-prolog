@@ -1,3 +1,26 @@
+conc([],B,B).
+conc([A|R], B, [A|R2]):-
+    conc(R,B,R2).
+
+sublist(L, R):-
+    prefix(L, R) .
+sublist(L, [ _| R]):-
+    sublist(L, R).
+
+prefix([ ], _) .
+prefix([X|L], [X|R]):-
+    prefix(L, R).
+
+% subset(X,R)
+% true if R is subset of X
+subset(_,[]).
+subset([_|R],R).
+subset([X|R],[X|S]):-
+    subset(R,S).
+
+all_subsets(X,R):-
+    findall(T,subset(X,T),R).
+    
 % insert(X, List, Result)
 % X is inserted into sorted List saved as Result 
 insert(X,[],[X]).
@@ -18,16 +41,6 @@ merge_list([X|L1], [Y|L2], [X|R]):-
 merge_list([X|L1], [Y|L2], [Y|R]):-
     not(X < Y), 
     merge_list([X|L1], L2, R).
-
-% subset(X,R)
-% true if R is subset of X
-subset(_,[]).
-subset([_|R],R).
-subset([X|R],[X|S]):-
-    subset(R,S).
-
-all_subsets(X,R):-
-    findall(T,subset(X,T),R).
 
 % member(X, ListSet)
 % true if X is a member of the list
