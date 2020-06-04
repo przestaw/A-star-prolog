@@ -1,0 +1,265 @@
+% !TeX spellcheck = pl_PL
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+\usepackage[T1]{fontenc} %font encoding ? -- need to clarify that
+%\usepackage[polish]{babel}
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+\geometry{margin=1in} % for example, change the margins to 2 inches all round
+
+\usepackage{graphicx} % support the \includegraphics command and options
+\usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+% These packages are all incorporated in the memoir class to one degree or another...
+
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+%%% END Article customizations
+
+%%% The "real" document content comes below...
+
+\title{%
+	Języki Przetwarzania Symbolicznego \\
+	\large Projekt : Modyfikacja algorytmu A*
+	}
+\author{Stawczyk Przemysław}
+\date{} % Activate to display a given date or no date (if empty),
+% otherwise the current date is printed 
+
+
+\begin{document}
+
+\maketitle
+
+%\begin{abstract}
+
+%\end{abstract}
+
+\section{Opis zadania}
+
+Wprowadzeniu do programu zmian implementujących program do testowego wykonania algorytmu wg
+następującej zasady:
+\\\\
+Zadane jest ograniczenie liczby kroków -- w postaci dodatkowego argumentu procedury
+\textit{search\_A\_star}.
+\\\\
+W każdym kroku algorytm pobiera z kolejki (uporządkowanej wg oceny heurystycznej stanu), \textit{bez
+usuwania}, pierwsze N węzłów -- N jest zadane w wywołaniu procedury \textit{search\_A\_star} (w postaci
+dodatkowego argumentu). Lista N węzłów jest przedstawiana użytkownikowi (wyprowadzana
+używając \textit{write}), wraz z informacją, który jest to krok wykonania algorytmu. Użytkownik podaje listę
+numerów, która określa \textit{kolejność pobierania węzłów z listy węzłów do kolejnych testowych
+przebiegów dalszego wykonania algorytmu}. Nazwijmy tę listę numerów listą wyboru. Do dalszego
+przebiegu wykonania zostaje pobrany węzeł wskazany pierwszym numerem na liście wyboru.
+\\\\
+W każdym kroku jest badany i aktualizowany licznik kroków. Jeśli w którymś kroku zostanie
+wyczerpany limit liczby kroków, to algorytm nawraca do poprzedniego kroku , aby wybrać na tym
+poziomie rekurencji kolejny węzeł z listy węzłów -- \textit{zgodnie z kolejnością podaną na liście wyboru}.
+Po wyczerpaniu możliwości wyboru węzła w tym kroku, algorytm pyta użytkownika, czy zwiększyć
+limit:
+\begin{itemize}
+	\item w przypadku odpowiedzi \textit{tak} limit zostaje zwiększony i wykonanie jest kontynuowane (a nie
+	rozpoczynane od nowa) z nowym ograniczeniem
+	\item w przypadku odpowiedzi \textit{nie} algorytm nawraca do wcześniejszego kroku w celu wyboru innego
+	węzła wg listy wyboru
+\end{itemize}
+(odpowiedź użytkownika jest czytana za pomocą \textit{read},
+użytkownik wprowadza sekwencję \textsc{<tekst> <kropka> <ENTER>})
+W ramach zadanego ograniczenia liczby kroków są więc badane wszystkie kombinacje możliwych
+wyborów węzłów na poszczególnych poziomach rekurencji--na każdym poziomie w kolejności
+ustalonej numerami na liście wyboru.
+
+\section{Rozwiązanie}
+
+\subsection{Wynikowy kod}
+
+\verbatiminput{A-star-prolog/A-star-interactive.pl}
+
+\subsection{Przestrzeń stanów}
+
+\verbatiminput{A-star-prolog/roadmap.pl}
+
+\section{Ślad wykonania}
+
+Ślad wykonania dla procedury: \textit{start\_A\_star(a, R, 3, 4).}
+
+\textbf{Wyjście:}
+\begin{verbatim}
+   search_A_star - Krok nr. : 1
+   1 - node(a, nil, nil, 0, 4)
+   Podaj indeksy wezlow:
+\end{verbatim}
+Dostępny jest do wyboru jedynie węzeł startowy - \textit{a}.\\
+\textbf{Wejście:}
+\begin{verbatim}
+   1.
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textbf{Wyjście:}
+\begin{verbatim}
+   continue - check goal : a
+   continue 1 expand : node(a, nil, nil, 0, 4)
+   search_A_star - Krok nr. : 2
+   1 - node(b, a-b, a, 2, 6)
+   2 - node(c, a-c, a, 3, 6)
+   Podaj indeksy wezlow:
+\end{verbatim}
+Próba dopasowania do węzła terminalnego, a następnie rozwinięcie węzła.\\
+\textbf{Wejście:}
+\begin{verbatim}
+   2.
+   1.
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textbf{Wyjście:}
+\begin{verbatim}
+   continue - check goal : c
+   continue 2 expand : node(c, a-c, a, 3, 6)
+   search_A_star - Krok nr. : 3
+   1 - node(b, a-b, a, 2, 6)
+   2 - node(d, c-d, c, 5, 6)
+   3 - node(e, c-e, c, 6, 10)
+   Podaj indeksy wezlow:
+\end{verbatim}
+Sprawdzany jest pierwszy węzeł z listy wyboru - \textit{node(c, a-c, a, 3, 6)}.\\
+\textbf{Wejście:}
+\begin{verbatim}
+   2.
+   3.
+   1.
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textbf{Wyjście:}
+\begin{verbatim}
+   continue - check goal : d
+   continue - check goal : e
+   continue - check goal : b
+   search_A_star - Osiągnięto limit krokow. Zwiekszyc limit? (t/n)
+\end{verbatim}
+Sprawdzane są wszystkie możliwości na tym poziomie w zadanej kolejności, jako, że osiągnięty został limit kroków. Następnie następuje pytanie do użytkownika - udzielamy odpowiedzi odmownej.\\
+
+\clearpage
+
+\textbf{Wejście:}
+\begin{verbatim}
+   n.
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textbf{Wyjście:}
+\begin{verbatim}
+   continue - check goal : b
+   continue 2 expand : node(b, a-b, a, 2, 6)
+   search_A_star - Krok nr. : 3
+   1 - node(c, a-c, a, 3, 6)
+   2 - node(g, b-g, b, 6, 7)
+   3 - node(f, b-f, b, 5, 12)
+   Podaj indeksy wezlow:
+\end{verbatim}
+Następuje wycofanie się do poziomu niżej i rozwinięcie kolejnego węzła - node(b, a-b, a, 2, 6).\\
+\textbf{Wejście:}
+\begin{verbatim}
+   2.
+   3.
+   1.
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textbf{Wyjście:}
+\begin{verbatim}
+   continue - check goal : g
+   continue - check goal : f
+   continue - check goal : c
+   search_A_star - Osiągnięto limit krokow. Zwiekszyc limit? (t/n)
+\end{verbatim}
+Sprawdzane są wszystkie możliwości na tym poziomie jako, że osiągnięty został limit kroków. Następnie następuje pytanie do użytkownika - udzielamy zgody.\\
+\textbf{Wejście:}
+\begin{verbatim}
+   t.
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textbf{Wyjście:}
+\begin{verbatim}
+   search_A_star - Krok nr. : 3
+   1 - node(c, a-c, a, 3, 6)
+   2 - node(g, b-g, b, 6, 7)
+   3 - node(f, b-f, b, 5, 12)
+   Podaj indeksy wezlow:
+\end{verbatim}
+Rozwiązywanie jest kontynuowane z nowym limitem.\\
+\textbf{Wejście:}
+\begin{verbatim}
+   3.
+   2.
+   1.
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textbf{Wyjście:}
+\begin{verbatim}
+   continue - check goal : f
+   continue 3 expand : node(f, b-f, b, 5, 12)
+   search_A_star - Krok nr. : 4
+   1 - node(c, a-c, a, 3, 6)
+   2 - node(g, b-g, b, 6, 7)
+   3 - node(h, f-h, f, 9, 12)
+   Podaj indeksy wezlow:
+\end{verbatim}
+Przechodzimy do poziomu 4. Rozwijany jest wybrany węzeł.\\
+\textbf{Wejście:}
+\begin{verbatim}
+   3.
+   2.
+   1.
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textbf{Wyjście:}
+\begin{verbatim}
+   continue - check goal : h
+   continue - check goal : g
+   continue - check goal : c
+   search_A_star - Osiągnięto limit krokow. Zwiekszyc limit? (t/n)
+\end{verbatim}
+Ponownie osiągamy limit głębokości wywołania, sprawdzając wcześniej możliwości z tego poziomu. Odmawiamy zwiększenia limitu.\\
+\textbf{Wejście:}
+\begin{verbatim}
+   n.
+\end{verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\textbf{Wyjście:}
+\begin{verbatim}
+   continue - check goal : g
+   continue 3 expand : node(g, b-g, b, 6, 7)
+   search_A_star - Krok nr. : 4
+   1 - node(c, a-c, a, 3, 6)
+   2 - node(m, g-m, g, 8, 8)
+   3 - node(f, b-f, b, 5, 12)
+   Podaj indeksy wezlow:
+\end{verbatim}
+\textbf{Wejście:}
+\begin{verbatim}
+   2.
+   1.
+   3.
+\end{verbatim}
+
+\textbf{Wyjście:}
+\begin{verbatim}
+   continue - check goal : m
+   continue - reached goal
+   R = path_cost([nil/a, (a-b)/b, (b-g)/g, (g-m)/m], 8)
+\end{verbatim}
+Sprawdzony węzeł prowadzi do stanu docelowego - rozwinięcie ścieżki od węzła startowego do terminalnego.
+\end{document}
